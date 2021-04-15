@@ -101,10 +101,6 @@ while running:
                 group = players_dict[player]['group']
                 group.add(new_enemy)
                 all_sprites.add(new_enemy)
-                # if player != "Player01":
-                #     enemies.add(new_enemy)
-
-
 
         # Check for clicks
         button_type = pygame.mouse.get_pressed()
@@ -123,10 +119,9 @@ while running:
                             unit.moving = True
                     except AttributeError:
                         pass
-            if button_type[1]:
-                respawn_speed -= 400
-                # pygame.time.set_timer(P2_ADDUNIT, 5000)
-                pygame.time.set_timer(P2_ADDUNIT, 200)
+            # if button_type[1]:
+            #     respawn_speed -= 400
+            #     pygame.time.set_timer(P2_ADDUNIT, 200)
 
         if event.type == pygame.MOUSEBUTTONUP:
             if not button_type[0]:
@@ -140,22 +135,21 @@ while running:
     all_sprites.update()
     lasers.update()
 
-    # hits = pygame.sprite.groupcollide(all_sprites, lasers, True, True)
-
     screen.fill((0, 0, 0))
+
     # Add units to screen
-    for entity in bases:
-        screen.blit(entity.surf, entity.rect)
-    for entity in all_sprites:
-        screen.blit(entity.surf, entity.rect)
+    for base in bases:
+        screen.blit(base.surf, base.rect)
+    for unit in all_sprites:
+        screen.blit(unit.surf, unit.rect)
         if event.type == FIND_ATTACK_TARGET:  # check event queue contains PLAYSOUNDEVENT
-            entity.check_for_target = True
-        # hits = pygame.sprite.spritecollide(entity, lasers, True)
-        for entity in lasers:
-            screen.blit(entity.surf, entity.rect)
-        # if pygame.sprite.spritecollide(entity, all_sprites, True):
-        #     entity.kill()
-        # hits = pygame.sprite.groupcollide(all_sprites, lasers, True, True)
+            unit.check_for_target = True
+        for laser in lasers:
+            screen.blit(laser.surf, laser.rect)
+            if unit not in laser.player_group:
+                if pygame.sprite.collide_rect(laser, unit):
+                    laser.kill()
+                    unit.kill()
 
     if unit_selector.draw_new_selection_box:
         pygame.draw.rect(screen, RED, selection_box, 2)
@@ -163,6 +157,7 @@ while running:
             if selection_box.colliderect(unit):
                 pygame.draw.rect(screen, BLUE, unit, 2)
                 unit.selected = True
+
     # Show Selected units
     for unit in p1_units:
         try:
@@ -171,10 +166,6 @@ while running:
             unit.overlapped()
         except AttributeError:
             pass
-
-    # hits = pygame.sprite.groupcollide(all_sprites, lasers, True, True)
-
-
 
     # Flip the display
     pygame.display.flip()

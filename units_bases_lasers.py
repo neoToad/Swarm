@@ -35,9 +35,6 @@ def distance(rect1, rect2):
         return 0
 
 
-
-
-
 class Base(pygame.sprite.Sprite):
     def __init__(self, center_p, color):
         super(Base, self).__init__()
@@ -94,7 +91,6 @@ class Unit(pygame.sprite.Sprite):
         # Which sprite group it belongs
         self.player_group = player_group
         self.lasers_group = lasers_group
-        # self.enemies = enemies_group
 
     def set_target(self, pos):
         self.move_target = pygame.Vector2(pos)
@@ -106,8 +102,6 @@ class Unit(pygame.sprite.Sprite):
             self.check_for_target = False
 
         self.attack()
-        # self.hits = pygame.sprite.groupcollide(self.units_group, self.lasers_group, True, True)
-
 
     def overlapped(self):
         for unit in self.units_group:
@@ -133,7 +127,6 @@ class Unit(pygame.sprite.Sprite):
                 self.pos += move
             self.rect.topleft = list(int(v) for v in self.pos)
 
-
     def find_target(self):
         """finds new targets in range:
                 for speed: only call this once every 200ms."""
@@ -154,7 +147,6 @@ class Unit(pygame.sprite.Sprite):
         dy = target_shoot[1] - self.rect.centery
         bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group)
         self.lasers_group.add(bullet)
-        # self.units_group.add(bullet)
 
     def attack(self):
         """attack, if able.
@@ -190,7 +182,7 @@ class Laser(pygame.sprite.Sprite):
         self.laser_pos = pygame.math.Vector2(x, y)
         self.target_pos = pygame.math.Vector2(dx, dy).normalize()
         self.all_units = all_units
-        self.playergroup = player_group
+        self.player_group = player_group
 
     def update(self):
         self.laser_pos += self.target_pos * self.speed
@@ -201,26 +193,3 @@ class Laser(pygame.sprite.Sprite):
             self.kill()
         if self.rect.y < self.y - 100 or self.rect.y > self.y + 100:
             self.kill()
-        # for x in self.all_units:
-        #     if x is self:
-        #         continue
-        #     else:
-
-        for unit in self.all_units:
-            if unit not in self.playergroup:
-                if pygame.sprite.collide_rect(self, unit):
-                    self.kill()
-                    unit.kill()
-
-        # hits = pygame.sprite.spritecollide(self, self.all_units, True)
-
-        # if self in self.rect.colliderect(self.x -10, self.y +10):
-        #     continue
-        #
-        # if self.rect.colliderect(unit.rect):
-        #     self.kill()
-        #     unit.kill()
-
-        # if not self.shooter:
-        # hits = pygame.sprite.spritecollide(self, self.enemies, True)
-        # return hits
