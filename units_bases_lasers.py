@@ -1,0 +1,226 @@
+import pygame
+import random
+from pygame.locals import (
+    RLEACCEL,
+)
+import math
+
+
+def distance(rect1, rect2):
+    x1, y1 = rect1.center
+    x1b, y1b = rect1.bottomright
+    x2, y2 = rect2.topleft
+    x2b, y2b = rect2.bottomright
+    left = x2b < x1
+    right = x1b < x2
+    top = y2b < y1
+    bottom = y1b < y2
+    if bottom and left:
+        return math.hypot(x2b-x1, y2-y1b)
+    elif left and top:
+        return math.hypot(x2b-x1, y2b-y1)
+    elif top and right:
+        return math.hypot(x2-x1b, y2b-y1)
+    elif right and bottom:
+        return math.hypot(x2-x1b, y2-y1b)
+    elif left:
+        return x1 - x2b
+    elif right:
+        return x2 - x1b
+    elif top:
+        return y1 - y2b
+    elif bottom:
+        return y2 - y1b
+    else:  # rectangles intersect
+        return 0
+
+
+
+
+
+class Base(pygame.sprite.Sprite):
+    def __init__(self, center_p, color):
+        super(Base, self).__init__()
+        self.surf = pygame.Surface((75, 75))
+        pygame.draw.circle(self.surf, color, (75 // 2, 75 // 2), 30)
+        self.surf.set_colorkey((255, 255, 0), RLEACCEL)
+        self.rect = self.surf.get_rect(center=center_p)
+        self.color = color
+
+
+class Unit(pygame.sprite.Sprite):
+    def __init__(self, screen, base, color, speed, all_units_group, player_group, lasers_group):
+        super(Unit, self).__init__()
+        self.units_group = all_units_group
+        self.surf = pygame.Surface((10, 10), pygame.SRCALPHA)
+        pygame.draw.circle(
+            self.surf,
+            color,
+            (5, 5), 5)
+        self.orig_img = self.surf.convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+
+
+        # Find spawn area
+        self.left_width = base.rect.centerx - 250
+        self.right_width = base.rect.centerx + 250
+        self.top_height = base.rect.centery - 95
+        self.bot_height = base.rect.centery + 95
+        self.rect = self.surf.get_rect(center=(
+            random.randint(self.left_width, self.right_width),
+            random.randint(self.top_height, self.bot_height),
+        )
+    )
+        # Selected units
+        self.screen = screen
+        self.color = color
+        self.selected = False
+
+        # Move unit to x, y position
+        self.pos = pygame.Vector2(self.rect.centerx, self.rect.centery)
+        self.move_target = self.pos
+        self.speed = speed
+        self.moving = False
+
+        # Setting attack target
+        self.attack_target = None
+        self.target_range = 50
+
+        # Attacking target
+        self.attack_cooldown = 2000
+        self.check_for_target = False
+        self.attack_last = 2000
+
+        # Which sprite group it belongs
+        self.player_group = player_group
+        self.lasers_group = lasers_group
+        # self.enemies = enemies_group
+
+    def set_target(self, pos):
+        self.move_target = pygame.Vector2(pos)
+
+    def update(self):
+        self.move_to()
+        if self.check_for_target:
+            self.find_target()
+            self.check_for_target = False
+
+        self.attack()
+        # self.hits = pygame.sprite.groupcollide(self.units_group, self.lasers_group, True, True)
+
+
+    def overlapped(self):
+        for unit in self.units_group:
+            if unit is self:
+                continue
+            if self.rect.colliderect(unit.rect):
+                if self.rect.centerx == unit.rect.centerx:
+                    self.pos = (self.rect.centerx - 2, self.rect.centery + 2)
+                    unit.pos = (self.rect.centerx + 2, self.rect.centery - 2)
+                    self.move_target = pygame.Vector2(self.pos)
+                    unit.move_target = pygame.Vector2(unit.pos)
+
+    def move_to(self):
+        move = self.move_target - self.pos
+        move_length = move.length()
+
+        if self.moving:
+            if move_length < self.speed:
+                self.pos = self.move_target
+            elif move_length != 0:
+                move.normalize_ip()
+                move = move * self.speed
+                self.pos += move
+            self.rect.topleft = list(int(v) for v in self.pos)
+
+
+    def find_target(self):
+        """finds new targets in range:
+                for speed: only call this once every 200ms."""
+        for enemy in self.units_group:
+            if enemy in self.player_group:
+                continue
+
+            if distance(self.rect, enemy.rect) <= self.target_range:
+                self.attack_target = pygame.Vector2(enemy.rect.center)
+                return
+            elif distance(self.rect, enemy.rect) > self.target_range:
+                self.attack_target = None
+
+        self.attack_target = None
+
+    def shoot(self, target_shoot):
+        dx = target_shoot[0] - self.rect.centerx
+        dy = target_shoot[1] - self.rect.centery
+        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group)
+        self.lasers_group.add(bullet)
+        # self.units_group.add(bullet)
+
+    def attack(self):
+        """attack, if able.
+        target exists? still alive? gun cooldown good?"""
+        # if self.attack_target is None: return
+        # if self.attack_target.health <= 0: return
+        if not self.cooldown_ready(): return
+        if self.attack_target:
+            self.shoot(self.attack_target)
+
+    def cooldown_ready(self):
+        # gun ready to fire? has cooldown in MS elapsed.
+        now = pygame.time.get_ticks()
+        if now - self.attack_last >= self.attack_cooldown:
+            self.attack_last = now
+            return True
+        return False
+
+
+class Laser(pygame.sprite.Sprite):
+    def __init__(self, x, y, dx, dy, all_units, player_group):
+        pygame.sprite.Sprite.__init__(self)
+        self.surf = pygame.Surface((4, 4), pygame.SRCALPHA)
+        pygame.draw.circle(
+            self.surf,
+            (255,255,255),
+            (2, 2), 2)
+        self.rect = self.surf.get_rect()
+        self.rect.center = x, y
+        self.x = x
+        self.y = y
+        self.speed = 1
+        self.laser_pos = pygame.math.Vector2(x, y)
+        self.target_pos = pygame.math.Vector2(dx, dy).normalize()
+        self.all_units = all_units
+        self.playergroup = player_group
+
+    def update(self):
+        self.laser_pos += self.target_pos * self.speed
+        self.rect.center = (round(self.laser_pos.x), round(self.laser_pos.y))
+
+        # Laser Range
+        if self.rect.x > self.x + 100 or self.rect.x < self.x - 100:
+            self.kill()
+        if self.rect.y < self.y - 100 or self.rect.y > self.y + 100:
+            self.kill()
+        # for x in self.all_units:
+        #     if x is self:
+        #         continue
+        #     else:
+
+        for unit in self.all_units:
+            if unit not in self.playergroup:
+                if pygame.sprite.collide_rect(self, unit):
+                    self.kill()
+                    unit.kill()
+
+        # hits = pygame.sprite.spritecollide(self, self.all_units, True)
+
+        # if self in self.rect.colliderect(self.x -10, self.y +10):
+        #     continue
+        #
+        # if self.rect.colliderect(unit.rect):
+        #     self.kill()
+        #     unit.kill()
+
+        # if not self.shooter:
+        # hits = pygame.sprite.spritecollide(self, self.enemies, True)
+        # return hits
