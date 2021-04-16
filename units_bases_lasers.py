@@ -35,11 +35,7 @@ def distance(rect1, rect2):
 
 
 class Base(pygame.sprite.Sprite):
-<<<<<<< Updated upstream
-    def __init__(self,screen, center_p, color):
-=======
     def __init__(self, screen, center_p, color, player_group, respawn_event):
->>>>>>> Stashed changes
         super(Base, self).__init__()
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (60 / 2, 60 / 2), 30)
@@ -49,16 +45,13 @@ class Base(pygame.sprite.Sprite):
         self.current_health = 200
         self.target_health = 1000
         self.maximum_health = 1000
-        self.health_bar_length = 200
+        self.health_bar_length = 100
         self.health_ratio = self.maximum_health / self.health_bar_length
         self.screen = screen
         self.health_change_speed = 4
-<<<<<<< Updated upstream
-=======
         self.player_group = player_group
         self.respawn_event = respawn_event
         self.font = pygame.font.SysFont('comicsans', 30)
->>>>>>> Stashed changes
 
     def update(self):
         # self.basic_health()
@@ -73,7 +66,7 @@ class Base(pygame.sprite.Sprite):
         if self.target_health > 0:
             self.target_health -= amount
         if self.target_health <= 0:
-            self.target_health = 0
+            self.player_dead()
 
     def get_health(self, amount):
         print("gothealth")
@@ -101,11 +94,17 @@ class Base(pygame.sprite.Sprite):
             transition_width = int((self.target_health - self.current_health) / - self.health_ratio)
             transition_color = (255, 255, 0)
 
-        health_bar_rect = pygame.Rect(self.rect.centerx - 100, self.rect.bottom + 5, self.current_health/self.health_ratio, 10)
+        health_bar_rect = pygame.Rect(self.rect.centerx - 50, self.rect.bottom + 5, self.current_health/self.health_ratio, 10)
         transition_bar_rect = pygame.Rect(health_bar_rect.right, self.rect.bottom + 5, transition_width, 10)
         pygame.draw.rect(self.screen, (255,0,0), health_bar_rect)
         pygame.draw.rect(self.screen, transition_color,transition_bar_rect)
-        pygame.draw.rect(self.screen, (255,255,255), (self.rect.centerx - 100, self.rect.bottom + 5, self.health_bar_length, 10), 1)
+        pygame.draw.rect(self.screen, (255,255,255), (self.rect.centerx - 50, self.rect.bottom + 5, self.health_bar_length, 10), 1)
+
+    def player_dead(self):
+        self.kill()
+        for unit in self.player_group:
+            unit.kill()
+        pygame.time.set_timer(self.respawn_event, 0)
 
 
 
@@ -260,11 +259,8 @@ class Laser(pygame.sprite.Sprite):
         self.target_pos = pygame.math.Vector2(dx, dy).normalize()
         self.all_units = all_units
         self.player_group = player_group
-<<<<<<< Updated upstream
-=======
         self.damage = 1
         self.player = player
->>>>>>> Stashed changes
 
     def update(self):
         self.laser_pos += self.target_pos * self.speed
