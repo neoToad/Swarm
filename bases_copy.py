@@ -27,10 +27,14 @@ pygame.time.set_timer(P3_ADDUNIT, 1000)
 P4_ADDUNIT = pygame.USEREVENT + 3
 pygame.time.set_timer(P4_ADDUNIT, 1000)
 
+#Standard gold increase
+GOLD_INCREASE = pygame.USEREVENT + 4
+pygame.time.set_timer(GOLD_INCREASE, 1000)
+
 # Timer for finding the attack target
 FIND_ATTACK_TARGET = pygame.USEREVENT + 5
 pygame.time.set_timer(FIND_ATTACK_TARGET, 500)
-add_player_units = [['Player01', P1_ADDUNIT], ['Player02', P2_ADDUNIT], ['Player03', P3_ADDUNIT], ['Player04', P4_ADDUNIT]]
+# add_player_units = [['Player01', P1_ADDUNIT], ['Player02', P2_ADDUNIT], ['Player03', P3_ADDUNIT], ['Player04', P4_ADDUNIT]]
 
 p1_units = pygame.sprite.Group()
 p2_units = pygame.sprite.Group()
@@ -45,6 +49,7 @@ screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
 players_dict = {
     "Player01":
+<<<<<<< Updated upstream
         {'color': RED, 'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED), 'group': p1_units},
     "Player02":
         {'base': Base(screen, (150, SCREEN_HEIGHT / 2), BLUE), 'group': p2_units},
@@ -52,17 +57,47 @@ players_dict = {
         {'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100), GREEN), 'group': p3_units},
     "Player04":
         {'base': Base(screen, (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2), WHITE), 'group': p4_units}
+=======
+        {'color': RED,
+         'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED, p1_units, P1_ADDUNIT),
+         'group': p1_units,
+         'respawn event': P1_ADDUNIT,
+         'respawn speed': 1000,
+         'speed': 1,
+         'gold': 0},
+
+    "Player02":
+        {'color': BLUE,
+         'base': Base(screen, (150, SCREEN_HEIGHT / 2), BLUE, p2_units, P2_ADDUNIT),
+         'group': p2_units,
+         'respawn event': P2_ADDUNIT,
+         'respawn speed': 1000,
+         'speed': 1,
+         'gold': 0},
+    "Player03":
+        {'color': GREEN,
+         'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100), GREEN, p3_units, P3_ADDUNIT),
+         'group': p3_units,
+         'respawn event': P3_ADDUNIT,
+         'respawn speed': 1000,
+         'speed': 1,
+         'gold': 0},
+    "Player04":
+        {'color': WHITE,
+         'base': Base(screen, (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2), WHITE, p4_units, P4_ADDUNIT),
+         'group': p4_units,
+         'respawn event': P4_ADDUNIT,
+         'respawn speed': 1000,
+         'speed': 1,
+         'gold': 0}
+>>>>>>> Stashed changes
 }
 
 # Set up the drawing window
 # screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 clock = pygame.time.Clock()
 
-respawn_speed = 1000
-
 leftclick_down_location = (0, 0)
-
-p1_speed = 1
 
 for x in players_dict:
     players_dict[x]['group'].add(players_dict[x]['base'])
@@ -83,6 +118,20 @@ class SelectorBox():
             return selection_box
 
 
+<<<<<<< Updated upstream
+=======
+def spawn_units():
+    for player in players_dict:
+        # print(add_command)
+        group = players_dict[player]['group']
+        if event.type == players_dict[player]['respawn event']:
+            new_enemy = Unit(screen, players_dict[player], players_dict[player]['color'], players_dict[player]['speed'],
+                             all_sprites, players_dict[player]['group'], lasers)
+
+            group.add(new_enemy)
+            all_sprites.add(new_enemy)
+
+>>>>>>> Stashed changes
 unit_selector = SelectorBox()
 
 # Run until the user asks to quit
@@ -145,11 +194,23 @@ while running:
                 leftclick_up_location = pygame.mouse.get_pos()
                 unit_selector.draw_new_selection_box = False
 
+            # Add gold
+        if event.type == GOLD_INCREASE:
+            for player in players_dict:
+                players_dict[player]['gold'] += 1
+                print(f"{player} gold: {players_dict[player]['gold']}")
+
     current_mouse_location = pygame.mouse.get_pos()
 
     selection_box = unit_selector.draw_selection()
 
     screen.fill((0, 0, 0))
+
+    # #Add gold
+    # if event.type == GOLD_INCREASE:
+    #     for player in players_dict:
+    #         players_dict[player]['gold'] += 1
+    #         print(f"{players_dict[player]} gold: {players_dict[player]['gold']}")
 
     # Draw units and check for collisions
     for unit in all_sprites:
@@ -162,7 +223,8 @@ while running:
                 if pygame.sprite.collide_rect(laser, unit):
                     if unit not in bases:
                         laser.kill()
-                        unit.kill()
+                        laser.player['gold'] += 1
+                        unit.get_damage(laser.damage)
                     else:
                         laser.kill()
                         print('planet hit')
@@ -185,10 +247,13 @@ while running:
             unit.overlapped(bases)
         # except AttributeError:
         #     pass
+    # Start earning gold
+
     all_sprites.update()
-    lasers.update()
-    bases.update()
+    # lasers.update()
 
     all_sprites.draw(screen)
+    bases.update()
+    lasers.update()
     pygame.display.flip()
     clock.tick(60)

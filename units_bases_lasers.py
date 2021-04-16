@@ -5,7 +5,6 @@ from pygame.locals import (
 )
 import math
 
-
 def distance(rect1, rect2):
     x1, y1 = rect1.center
     x1b, y1b = rect1.bottomright
@@ -36,7 +35,11 @@ def distance(rect1, rect2):
 
 
 class Base(pygame.sprite.Sprite):
+<<<<<<< Updated upstream
     def __init__(self,screen, center_p, color):
+=======
+    def __init__(self, screen, center_p, color, player_group, respawn_event):
+>>>>>>> Stashed changes
         super(Base, self).__init__()
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (60 / 2, 60 / 2), 30)
@@ -50,10 +53,21 @@ class Base(pygame.sprite.Sprite):
         self.health_ratio = self.maximum_health / self.health_bar_length
         self.screen = screen
         self.health_change_speed = 4
+<<<<<<< Updated upstream
+=======
+        self.player_group = player_group
+        self.respawn_event = respawn_event
+        self.font = pygame.font.SysFont('comicsans', 30)
+>>>>>>> Stashed changes
 
     def update(self):
         # self.basic_health()
         self.advanced_health()
+        self.show_unit_numbers()
+
+    def show_unit_numbers(self):
+        self.text = self.font.render(str(len(self.player_group)-1), 1, (0,0,0))
+        self.screen.blit(self.text, (self.rect.x + 20, self.rect.y + 20))
 
     def get_damage(self, amount):
         if self.target_health > 0:
@@ -96,7 +110,7 @@ class Base(pygame.sprite.Sprite):
 
 
 class Unit(pygame.sprite.Sprite):
-    def __init__(self, screen, base, color, speed, all_units_group, player_group, lasers_group):
+    def __init__(self, screen, player, color, speed, all_units_group, player_group, lasers_group):
         super(Unit, self).__init__()
         self.units_group = all_units_group
         self.image = pygame.Surface((10, 10), pygame.SRCALPHA)
@@ -106,13 +120,15 @@ class Unit(pygame.sprite.Sprite):
             (5, 5), 5)
         self.orig_img = self.image.convert()
         self.image.set_colorkey((0, 0, 0), RLEACCEL)
+        self.player = player
+        self.health = 1
 
 
         # Find spawn area
-        self.left_width = base.rect.centerx - 250
-        self.right_width = base.rect.centerx + 250
-        self.top_height = base.rect.centery - 95
-        self.bot_height = base.rect.centery + 95
+        self.left_width = player['base'].rect.centerx - 250
+        self.right_width = player['base'].rect.centerx + 250
+        self.top_height = player['base'].rect.centery - 95
+        self.bot_height = player['base'].rect.centery + 95
         self.rect = self.image.get_rect(center=(
             random.randint(self.left_width, self.right_width),
             random.randint(self.top_height, self.bot_height),
@@ -197,7 +213,7 @@ class Unit(pygame.sprite.Sprite):
     def shoot(self, target_shoot):
         dx = target_shoot[0] - self.rect.centerx
         dy = target_shoot[1] - self.rect.centery
-        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group)
+        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group, self.player)
         self.lasers_group.add(bullet)
 
     def attack(self):
@@ -217,9 +233,18 @@ class Unit(pygame.sprite.Sprite):
             return True
         return False
 
+    def get_damage(self, amount):
+        if self.health > 0:
+            self.health -= amount
+        if self.health <= 0:
+            self.player_dead()
+
+    def player_dead(self):
+        self.kill()
+
 
 class Laser(pygame.sprite.Sprite):
-    def __init__(self, x, y, dx, dy, all_units, player_group):
+    def __init__(self, x, y, dx, dy, all_units, player_group, player):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((4, 4), pygame.SRCALPHA)
         pygame.draw.circle(
@@ -235,6 +260,11 @@ class Laser(pygame.sprite.Sprite):
         self.target_pos = pygame.math.Vector2(dx, dy).normalize()
         self.all_units = all_units
         self.player_group = player_group
+<<<<<<< Updated upstream
+=======
+        self.damage = 1
+        self.player = player
+>>>>>>> Stashed changes
 
     def update(self):
         self.laser_pos += self.target_pos * self.speed
