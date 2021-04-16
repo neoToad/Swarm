@@ -36,26 +36,76 @@ def distance(rect1, rect2):
 
 
 class Base(pygame.sprite.Sprite):
-    def __init__(self, center_p, color):
+    def __init__(self,screen, center_p, color):
         super(Base, self).__init__()
-        self.surf = pygame.Surface((75, 75))
-        pygame.draw.circle(self.surf, color, (75 // 2, 75 // 2), 30)
-        self.surf.set_colorkey((255, 255, 0), RLEACCEL)
-        self.rect = self.surf.get_rect(center=center_p)
+        self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, color, (60 / 2, 60 / 2), 30)
+        self.image.set_colorkey((0, 0, 0), RLEACCEL)
+        self.rect = self.image.get_rect(center=center_p)
         self.color = color
+        self.current_health = 200
+        self.target_health = 1000
+        self.maximum_health = 1000
+        self.health_bar_length = 200
+        self.health_ratio = self.maximum_health / self.health_bar_length
+        self.screen = screen
+        self.health_change_speed = 4
+
+    def update(self):
+        # self.basic_health()
+        self.advanced_health()
+
+    def get_damage(self, amount):
+        if self.target_health > 0:
+            self.target_health -= amount
+        if self.target_health <= 0:
+            self.target_health = 0
+
+    def get_health(self, amount):
+        print("gothealth")
+        if self.target_health < self.maximum_health:
+
+            self.target_health += amount
+        if self.target_health >= self.maximum_health:
+            self.target_health = self.maximum_health
+
+    # def basic_health(self):
+    #     pygame.draw.rect(self.screen, (255,0,0), (10,10, self.current_health/self.health_ratio, 25))
+    #     pygame.draw.rect(self.screen, (255, 255, 255), (10, 10, self.health_bar_length, 25), 4)
+
+    def advanced_health(self):
+        transition_width = 0
+        transition_color = (255, 0, 0)
+
+        if self.current_health < self.target_health:
+            self.current_health += self.health_change_speed
+            transition_width = int((self.target_health - self.current_health) / self.health_ratio)
+            transition_color = (0, 255, 0)
+
+        if self.current_health > self.target_health:
+            self.current_health -= self.health_change_speed
+            transition_width = int((self.target_health - self.current_health) / - self.health_ratio)
+            transition_color = (255, 255, 0)
+
+        health_bar_rect = pygame.Rect(self.rect.centerx - 100, self.rect.bottom + 5, self.current_health/self.health_ratio, 10)
+        transition_bar_rect = pygame.Rect(health_bar_rect.right, self.rect.bottom + 5, transition_width, 10)
+        pygame.draw.rect(self.screen, (255,0,0), health_bar_rect)
+        pygame.draw.rect(self.screen, transition_color,transition_bar_rect)
+        pygame.draw.rect(self.screen, (255,255,255), (self.rect.centerx - 100, self.rect.bottom + 5, self.health_bar_length, 10), 1)
+
 
 
 class Unit(pygame.sprite.Sprite):
     def __init__(self, screen, base, color, speed, all_units_group, player_group, lasers_group):
         super(Unit, self).__init__()
         self.units_group = all_units_group
-        self.surf = pygame.Surface((10, 10), pygame.SRCALPHA)
+        self.image = pygame.Surface((10, 10), pygame.SRCALPHA)
         pygame.draw.circle(
-            self.surf,
+            self.image,
             color,
             (5, 5), 5)
-        self.orig_img = self.surf.convert()
-        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+        self.orig_img = self.image.convert()
+        self.image.set_colorkey((0, 0, 0), RLEACCEL)
 
 
         # Find spawn area
@@ -63,7 +113,7 @@ class Unit(pygame.sprite.Sprite):
         self.right_width = base.rect.centerx + 250
         self.top_height = base.rect.centery - 95
         self.bot_height = base.rect.centery + 95
-        self.rect = self.surf.get_rect(center=(
+        self.rect = self.image.get_rect(center=(
             random.randint(self.left_width, self.right_width),
             random.randint(self.top_height, self.bot_height),
         )
@@ -103,9 +153,11 @@ class Unit(pygame.sprite.Sprite):
 
         self.attack()
 
-    def overlapped(self):
+    def overlapped(self, group_to_skip):
         for unit in self.units_group:
             if unit is self:
+                continue
+            if unit in group_to_skip:
                 continue
             if self.rect.colliderect(unit.rect):
                 if self.rect.centerx == unit.rect.centerx:
@@ -169,12 +221,12 @@ class Unit(pygame.sprite.Sprite):
 class Laser(pygame.sprite.Sprite):
     def __init__(self, x, y, dx, dy, all_units, player_group):
         pygame.sprite.Sprite.__init__(self)
-        self.surf = pygame.Surface((4, 4), pygame.SRCALPHA)
+        self.image = pygame.Surface((4, 4), pygame.SRCALPHA)
         pygame.draw.circle(
-            self.surf,
+            self.image,
             (255,255,255),
             (2, 2), 2)
-        self.rect = self.surf.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.center = x, y
         self.x = x
         self.y = y
