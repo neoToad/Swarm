@@ -3,6 +3,7 @@
 # Import and initialize the pygame library
 import pygame
 from units_bases_lasers import Base, Unit
+from upgrade_menu import show_gold
 
 pygame.init()
 
@@ -21,11 +22,11 @@ respawn_speed = 1000
 P1_ADDUNIT = pygame.USEREVENT + 0
 pygame.time.set_timer(P1_ADDUNIT, respawn_speed)
 P2_ADDUNIT = pygame.USEREVENT + 1
-pygame.time.set_timer(P2_ADDUNIT, 1000)
+pygame.time.set_timer(P2_ADDUNIT, respawn_speed)
 P3_ADDUNIT = pygame.USEREVENT + 2
-pygame.time.set_timer(P3_ADDUNIT, 1000)
+pygame.time.set_timer(P3_ADDUNIT, respawn_speed)
 P4_ADDUNIT = pygame.USEREVENT + 3
-pygame.time.set_timer(P4_ADDUNIT, 1000)
+pygame.time.set_timer(P4_ADDUNIT, respawn_speed)
 
 #Standard gold increase
 GOLD_INCREASE = pygame.USEREVENT + 4
@@ -49,15 +50,6 @@ screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
 players_dict = {
     "Player01":
-<<<<<<< Updated upstream
-        {'color': RED, 'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED), 'group': p1_units},
-    "Player02":
-        {'base': Base(screen, (150, SCREEN_HEIGHT / 2), BLUE), 'group': p2_units},
-    "Player03":
-        {'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100), GREEN), 'group': p3_units},
-    "Player04":
-        {'base': Base(screen, (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2), WHITE), 'group': p4_units}
-=======
         {'color': RED,
          'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED, p1_units, P1_ADDUNIT),
          'group': p1_units,
@@ -90,7 +82,6 @@ players_dict = {
          'respawn speed': 1000,
          'speed': 1,
          'gold': 0}
->>>>>>> Stashed changes
 }
 
 # Set up the drawing window
@@ -118,8 +109,6 @@ class SelectorBox():
             return selection_box
 
 
-<<<<<<< Updated upstream
-=======
 def spawn_units():
     for player in players_dict:
         # print(add_command)
@@ -131,7 +120,6 @@ def spawn_units():
             group.add(new_enemy)
             all_sprites.add(new_enemy)
 
->>>>>>> Stashed changes
 unit_selector = SelectorBox()
 
 # Run until the user asks to quit
@@ -146,27 +134,7 @@ while running:
 
         # Randomly spawn units in their base area
 
-        for player, add_command in add_player_units:
-            # print(add_command)
-            group = players_dict[player]['group']
-            if event.type == add_command:
-                new_enemy = Unit(screen, players_dict[player]['base'], players_dict[player]['base'].color, p1_speed, all_sprites, players_dict[player]['group'], lasers)
-
-                group.add(new_enemy)
-                all_sprites.add(new_enemy)
-
-
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    for x in bases:
-                        x.get_health(50)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
-                    for x in bases:
-                        x.get_damage(1)
-
-            # bases.add(players_dict[player]['base'])
+        spawn_units()
 
         # Check for clicks
         button_type = pygame.mouse.get_pressed()
@@ -185,9 +153,6 @@ while running:
                             unit.moving = True
                     except AttributeError:
                         pass
-            # if button_type[1]:
-            #     respawn_speed -= 400
-            #     pygame.time.set_timer(P2_ADDUNIT, 200)
 
         if event.type == pygame.MOUSEBUTTONUP:
             if not button_type[0]:
@@ -218,16 +183,16 @@ while running:
         if event.type == FIND_ATTACK_TARGET:  # check event queue contains PLAYSOUNDEVENT
             unit.check_for_target = True
         for laser in lasers:
-            screen.blit(laser.image, laser.rect)
+            # screen.blit(laser.image, laser.rect)
             if unit not in laser.player_group:
                 if pygame.sprite.collide_rect(laser, unit):
                     if unit not in bases:
                         laser.kill()
                         laser.player['gold'] += 1
-                        unit.get_damage(laser.damage)
+                        unit.kill()
                     else:
                         laser.kill()
-                        print('planet hit')
+                        unit.get_damage(laser.damage)
                         pass
 
     if unit_selector.draw_new_selection_box:
@@ -252,8 +217,10 @@ while running:
     all_sprites.update()
     # lasers.update()
 
+    lasers.draw(screen)
     all_sprites.draw(screen)
     bases.update()
     lasers.update()
+    show_gold(screen, players_dict['Player01']['gold'])
     pygame.display.flip()
     clock.tick(60)
