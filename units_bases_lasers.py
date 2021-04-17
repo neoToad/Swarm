@@ -149,7 +149,7 @@ class Unit(pygame.sprite.Sprite):
         self.target_range = 50
 
         # Attacking target
-        self.attack_cooldown = 2000
+        self.attack_cooldown = player['Atk Spd']
         self.check_for_target = False
         self.attack_last = 2000
 
@@ -259,7 +259,7 @@ class Laser(pygame.sprite.Sprite):
         self.target_pos = pygame.math.Vector2(dx, dy).normalize()
         self.all_units = all_units
         self.player_group = player_group
-        self.damage = 1
+        self.damage = player['Atk Dmg']
         self.player = player
 
     def update(self):

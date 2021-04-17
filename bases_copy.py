@@ -3,12 +3,12 @@
 # Import and initialize the pygame library
 import pygame
 from units_bases_lasers import Base, Unit
-from upgrade_menu import show_gold
+from upgrade_menu import show_gold, UpgradeMenu, Button
 
 pygame.init()
 
 SCREEN_WIDTH = 1400
-SCREEN_HEIGHT = 800
+SCREEN_HEIGHT = 900
 
 RED = (200, 0, 0)
 BLUE = (0, 0, 128)
@@ -48,14 +48,24 @@ lasers = pygame.sprite.Group()
 # players dict
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
+# upgrade_menu = UpgradeMenu(screen)
+# btn_upgrade_dmg = Button(screen, 2, "Atk Dmg")
+# btn_upgrade_atkspd = Button(screen,4, "Atk Spd")
+# btn_upgrade_respd = Button(screen,6, "Respawn")
+# btn_upgrade_spd = Button(screen,8, "Spd")
+# buttons = [btn_upgrade_dmg, btn_upgrade_atkspd, btn_upgrade_respd, btn_upgrade_spd]
+
 players_dict = {
     "Player01":
         {'color': RED,
          'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED, p1_units, P1_ADDUNIT),
          'group': p1_units,
          'respawn event': P1_ADDUNIT,
-         'respawn speed': 1000,
-         'speed': 1,
+         'Res. Spd': 1000,
+         'Spd': 1,
+         'Atk Dmg': 1,
+
+         'Atk Spd': 2000,
          'gold': 0},
 
     "Player02":
@@ -63,26 +73,42 @@ players_dict = {
          'base': Base(screen, (150, SCREEN_HEIGHT / 2), BLUE, p2_units, P2_ADDUNIT),
          'group': p2_units,
          'respawn event': P2_ADDUNIT,
-         'respawn speed': 1000,
-         'speed': 1,
+         "Res. Spd": 1000,
+         'Spd': 1,
+         'Atk Dmg': 1,
+
+         'Atk Spd': 2000,
          'gold': 0},
     "Player03":
         {'color': GREEN,
-         'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100), GREEN, p3_units, P3_ADDUNIT),
+         'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200), GREEN, p3_units, P3_ADDUNIT),
          'group': p3_units,
          'respawn event': P3_ADDUNIT,
-         'respawn speed': 1000,
-         'speed': 1,
+         "Res. Spd": 1000,
+         'Spd': 1,
+
+         'Atk Dmg': 1,
+
+         'Atk Spd': 2000,
          'gold': 0},
     "Player04":
         {'color': WHITE,
          'base': Base(screen, (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2), WHITE, p4_units, P4_ADDUNIT),
          'group': p4_units,
          'respawn event': P4_ADDUNIT,
-         'respawn speed': 1000,
-         'speed': 1,
+         "Res. Spd": 1000,
+         'Atk Dmg': 1,
+         'Atk Spd': 2000, # Lower is faster
+         'Spd': 1,
          'gold': 0}
 }
+
+upgrade_menu = UpgradeMenu(screen)
+btn_upgrade_dmg = Button(screen, 2, "Atk Dmg", players_dict["Player01"])
+btn_upgrade_atkspd = Button(screen,4, "Atk Spd", players_dict["Player01"])
+btn_upgrade_respd = Button(screen,6, "Res. Spd", players_dict["Player01"])
+btn_upgrade_spd = Button(screen,8, "Spd", players_dict["Player01"])
+buttons = [btn_upgrade_dmg, btn_upgrade_atkspd, btn_upgrade_respd, btn_upgrade_spd]
 
 # Set up the drawing window
 # screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
@@ -114,7 +140,7 @@ def spawn_units():
         # print(add_command)
         group = players_dict[player]['group']
         if event.type == players_dict[player]['respawn event']:
-            new_enemy = Unit(screen, players_dict[player], players_dict[player]['color'], players_dict[player]['speed'],
+            new_enemy = Unit(screen, players_dict[player], players_dict[player]['color'], players_dict[player]['Spd'],
                              all_sprites, players_dict[player]['group'], lasers)
 
             group.add(new_enemy)
@@ -125,7 +151,6 @@ unit_selector = SelectorBox()
 # Run until the user asks to quit
 running = True
 while running:
-
     # Did the user click the window close button?
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -139,11 +164,19 @@ while running:
         # Check for clicks
         button_type = pygame.mouse.get_pressed()
         if event.type == pygame.MOUSEBUTTONDOWN: # If a mouse button is pressed
+
+            # Check if clicked in game screen and draw the selection
             if button_type[0]:
                 for unit in p1_units:
                     unit.selected = False
                 leftclick_down_location = pygame.mouse.get_pos()
                 unit_selector.draw_new_selection_box = True
+
+                # Check if game menu button has been pressed
+                for button in buttons:
+                    if button.rect.collidepoint(leftclick_down_location):
+                        button.check_for_click()
+
             if button_type[2]:
                 rightclick_down_location = pygame.mouse.get_pos()
                 for unit in p1_units:
@@ -153,6 +186,9 @@ while running:
                             unit.moving = True
                     except AttributeError:
                         pass
+
+            # Check if game menu button has been pressed
+
 
         if event.type == pygame.MOUSEBUTTONUP:
             if not button_type[0]:
@@ -180,7 +216,7 @@ while running:
     # Draw units and check for collisions
     for unit in all_sprites:
         # screen.blit(unit.image, unit.rect)
-        if event.type == FIND_ATTACK_TARGET:  # check event queue contains PLAYSOUNDEVENT
+        if event.type == FIND_ATTACK_TARGET:  # check event queue
             unit.check_for_target = True
         for laser in lasers:
             # screen.blit(laser.image, laser.rect)
@@ -221,6 +257,9 @@ while running:
     all_sprites.draw(screen)
     bases.update()
     lasers.update()
+    upgrade_menu.update()
+    for button in buttons:
+        button.update()
     show_gold(screen, players_dict['Player01']['gold'])
     pygame.display.flip()
     clock.tick(60)
