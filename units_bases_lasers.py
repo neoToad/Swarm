@@ -35,7 +35,7 @@ def distance(rect1, rect2):
 
 
 class Base(pygame.sprite.Sprite):
-    def __init__(self, screen, center_p, color, player_group, respawn_event):
+    def __init__(self, screen, player, center_p, color, player_group, respawn_event, lasers_group, all_units):
         super(Base, self).__init__()
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (60 / 2, 60 / 2), 30)
@@ -53,10 +53,29 @@ class Base(pygame.sprite.Sprite):
         self.respawn_event = respawn_event
         self.font = pygame.font.SysFont('comicsans', 30)
 
+        self.lasers_group = lasers_group
+        self.player = player
+
+        self.attack_target = None
+        self.target_range = 300
+        self.laser_range = 400
+        self.attack_cooldown = 1500
+        self.units_group = all_units
+
+        self.check_for_target = False
+
+        self.attack_last = 2000
+
     def update(self):
         # self.basic_health()
         self.advanced_health()
         self.show_unit_numbers()
+
+        if self.check_for_target:
+            self.find_target()
+            self.check_for_target = False
+
+        self.attack()
 
     def show_unit_numbers(self):
         self.text = self.font.render(str(len(self.player_group)-1), 1, (0,0,0))
@@ -106,6 +125,44 @@ class Base(pygame.sprite.Sprite):
             unit.kill()
         pygame.time.set_timer(self.respawn_event, 0)
 
+    def find_target(self):
+        """finds new targets in range:
+                for speed: only call this once every 200ms."""
+        for enemy in self.units_group:
+            if enemy in self.player_group:
+                continue
+
+            if distance(self.rect, enemy.rect) <= self.target_range:
+                self.attack_target = pygame.Vector2(enemy.rect.center)
+                return
+            elif distance(self.rect, enemy.rect) > self.target_range:
+                self.attack_target = None
+
+        self.attack_target = None
+
+    def attack(self):
+        """attack, if able.
+        target exists? still alive? gun cooldown good?"""
+        # if self.attack_target is None: return
+        # if self.attack_target.health <= 0: return
+        if not self.cooldown_ready(): return
+        if self.attack_target:
+            self.shoot(self.attack_target, self.player)
+
+    def cooldown_ready(self):
+        # gun ready to fire? has cooldown in MS elapsed.
+        now = pygame.time.get_ticks()
+        if now - self.attack_last >= self.attack_cooldown:
+            self.attack_last = now
+            return True
+        return False
+
+    def shoot(self, target_shoot, player):
+        dx = target_shoot[0] - self.rect.centerx
+        dy = target_shoot[1] - self.rect.centery
+        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group, player, self.laser_range)
+        self.lasers_group.add(bullet)
+
 
 
 class Unit(pygame.sprite.Sprite):
@@ -147,6 +204,8 @@ class Unit(pygame.sprite.Sprite):
         # Setting attack target
         self.attack_target = None
         self.target_range = 50
+
+        self.laser_range = 100
 
         # Attacking target
         self.attack_cooldown = player['Atk Spd']
@@ -212,7 +271,7 @@ class Unit(pygame.sprite.Sprite):
     def shoot(self, target_shoot):
         dx = target_shoot[0] - self.rect.centerx
         dy = target_shoot[1] - self.rect.centery
-        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group, self.player)
+        bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group, self.player, self.laser_range)
         self.lasers_group.add(bullet)
 
     def attack(self):
@@ -243,7 +302,7 @@ class Unit(pygame.sprite.Sprite):
 
 
 class Laser(pygame.sprite.Sprite):
-    def __init__(self, x, y, dx, dy, all_units, player_group, player):
+    def __init__(self, x, y, dx, dy, all_units, player_group, player, range):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((4, 4), pygame.SRCALPHA)
         pygame.draw.circle(
@@ -262,12 +321,14 @@ class Laser(pygame.sprite.Sprite):
         self.damage = player['Atk Dmg']
         self.player = player
 
+        self.range = range
+
     def update(self):
         self.laser_pos += self.target_pos * self.speed
         self.rect.center = (round(self.laser_pos.x), round(self.laser_pos.y))
 
         # Laser Range
-        if self.rect.x > self.x + 100 or self.rect.x < self.x - 100:
+        if self.rect.x > self.x + self.range or self.rect.x < self.x - self.range:
             self.kill()
-        if self.rect.y < self.y - 100 or self.rect.y > self.y + 100:
+        if self.rect.y < self.y - self.range or self.rect.y > self.y + self.range:
             self.kill()

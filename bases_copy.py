@@ -58,7 +58,8 @@ screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 players_dict = {
     "Player01":
         {'color': RED,
-         'base': Base(screen, (SCREEN_WIDTH / 2, 100), RED, p1_units, P1_ADDUNIT),
+         'base': None,
+         'base loc': (SCREEN_WIDTH / 2, 100),
          'group': p1_units,
          'respawn event': P1_ADDUNIT,
          'Res. Spd': 1000,
@@ -75,7 +76,8 @@ players_dict = {
 
     "Player02":
         {'color': BLUE,
-         'base': Base(screen, (150, SCREEN_HEIGHT / 2), BLUE, p2_units, P2_ADDUNIT),
+         'base': None,
+         'base loc': (150, SCREEN_HEIGHT / 2),
          'group': p2_units,
          'respawn event': P2_ADDUNIT,
          "Res. Spd": 1000,
@@ -87,7 +89,8 @@ players_dict = {
          'gold': 0},
     "Player03":
         {'color': GREEN,
-         'base': Base(screen, (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200), GREEN, p3_units, P3_ADDUNIT),
+         'base': None,
+         'base loc': (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200),
          'group': p3_units,
          'respawn event': P3_ADDUNIT,
          "Res. Spd": 1000,
@@ -100,7 +103,8 @@ players_dict = {
          'gold': 0},
     "Player04":
         {'color': WHITE,
-         'base': Base(screen, (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2), WHITE, p4_units, P4_ADDUNIT),
+         'base': None,
+         'base loc': (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2),
          'group': p4_units,
          'respawn event': P4_ADDUNIT,
          "Res. Spd": 1000,
@@ -125,9 +129,11 @@ clock = pygame.time.Clock()
 leftclick_down_location = (0, 0)
 
 for x in players_dict:
+    players_dict[x]['base'] = Base(screen, players_dict[x], players_dict[x]['base loc'], players_dict[x]['color'], players_dict[x]['group'], players_dict[x]['respawn event'], lasers, all_sprites)
     players_dict[x]['group'].add(players_dict[x]['base'])
     bases.add(players_dict[x]['base'])
     all_sprites.add(players_dict[x]['base'])
+    # print(players_dict[x])
 
 
 class SelectorBox():
