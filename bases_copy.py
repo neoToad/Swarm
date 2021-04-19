@@ -62,10 +62,15 @@ players_dict = {
          'group': p1_units,
          'respawn event': P1_ADDUNIT,
          'Res. Spd': 1000,
+         'Res. Spd cost': 50,
          'Spd': 1,
+         'Spd cost': 50,
          'Atk Dmg': 1,
+         'Atk Dmg cost': 50,
 
          'Atk Spd': 2000,
+
+         'Atk Spd cost': 50,
          'gold': 0},
 
     "Player02":
@@ -75,6 +80,7 @@ players_dict = {
          'respawn event': P2_ADDUNIT,
          "Res. Spd": 1000,
          'Spd': 1,
+         'Spd Cost': 50,
          'Atk Dmg': 1,
 
          'Atk Spd': 2000,
@@ -86,6 +92,7 @@ players_dict = {
          'respawn event': P3_ADDUNIT,
          "Res. Spd": 1000,
          'Spd': 1,
+         'Spd Cost': 50,
 
          'Atk Dmg': 1,
 
@@ -100,6 +107,7 @@ players_dict = {
          'Atk Dmg': 1,
          'Atk Spd': 2000, # Lower is faster
          'Spd': 1,
+         'Spd Cost': 50,
          'gold': 0}
 }
 
@@ -137,7 +145,6 @@ class SelectorBox():
 
 def spawn_units():
     for player in players_dict:
-        # print(add_command)
         group = players_dict[player]['group']
         if event.type == players_dict[player]['respawn event']:
             new_enemy = Unit(screen, players_dict[player], players_dict[player]['color'], players_dict[player]['Spd'],
@@ -199,7 +206,7 @@ while running:
         if event.type == GOLD_INCREASE:
             for player in players_dict:
                 players_dict[player]['gold'] += 1
-                print(f"{player} gold: {players_dict[player]['gold']}")
+                # print(f"{player} gold: {players_dict[player]['gold']}")
 
     current_mouse_location = pygame.mouse.get_pos()
 

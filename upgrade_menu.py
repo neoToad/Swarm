@@ -52,19 +52,31 @@ class Button(UpgradeMenu):
         self.text = self.font.render(self.name, 1, (100,50,0))
         self.screen.blit(self.text, (self.btn_posx + 10, self.btn_posy + 30))
 
+        self.text = self.font.render(str(self.player[self.name + ' cost']), 1, (100, 50, 0))
+        self.screen.blit(self.text, (self.btn_posx + 10, self.btn_posy + 50))
+
     def check_for_click(self):
-        self.per_btn_action()
+        self.check_if_enough_gold()
 
-    def per_btn_action(self):
-        if self.name == 'Atk Dmg' or self.name == 'Spd':
-            self.player[self.name] += 1
+    def check_if_enough_gold(self):
+        if self.player['gold'] >= self.player[self.name + ' cost']:
+            if self.name == 'Atk Dmg' or self.name == 'Spd':
+                self.player[self.name] += 1
+                self.player['gold'] -= self.player[self.name + ' cost']
+                self.player[self.name + ' cost'] += 50
 
-        if self.name == 'Atk Spd':
-            self.player[self.name] -= 100
+            if self.name == 'Atk Spd':
+                self.player[self.name] -= 100
+                self.player['gold'] -= self.player[self.name + ' cost']
+                self.player[self.name + ' cost'] += 50
 
-        if self.name == 'Res. Spd':
-            self.player[self.name] -= 100
-            pygame.time.set_timer(self.player['respawn event'], self.player[self.name])
+            if self.name == 'Res. Spd':
+                self.player[self.name] -= 100
+                pygame.time.set_timer(self.player['respawn event'], self.player[self.name])
+                self.player['gold'] -= self.player[self.name + ' cost']
+                self.player[self.name + ' cost'] += 50
+        else:
+            print("not enough gold")
 
         print(self.player[self.name])
 
