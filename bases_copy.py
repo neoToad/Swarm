@@ -2,8 +2,9 @@
 
 # Import and initialize the pygame library
 import pygame
-from units_bases_lasers import Base, Unit
+from units_lasers import Unit
 from upgrade_menu import show_gold, UpgradeMenu, Button
+from Base import Base
 
 pygame.init()
 
@@ -68,10 +69,10 @@ players_dict = {
          'Spd cost': 50,
          'Atk Dmg': 1,
          'Atk Dmg cost': 50,
-
          'Atk Spd': 2000,
-
          'Atk Spd cost': 50,
+         'unit health': 1,
+         'laser range': 100,
          'gold': 0},
 
     "Player02":
@@ -80,39 +81,53 @@ players_dict = {
          'base loc': (150, SCREEN_HEIGHT / 2),
          'group': p2_units,
          'respawn event': P2_ADDUNIT,
-         "Res. Spd": 1000,
+         'Res. Spd': 1000,
+         'Res. Spd cost': 50,
          'Spd': 1,
-         'Spd Cost': 50,
+         'Spd cost': 50,
          'Atk Dmg': 1,
-
+         'Atk Dmg cost': 50,
          'Atk Spd': 2000,
+         'Atk Spd cost': 50,
+         'unit health': 1,
+         'laser range': 100,
          'gold': 0},
+
     "Player03":
         {'color': GREEN,
          'base': None,
          'base loc': (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 200),
          'group': p3_units,
          'respawn event': P3_ADDUNIT,
-         "Res. Spd": 1000,
+         'Res. Spd': 1000,
+         'Res. Spd cost': 50,
          'Spd': 1,
-         'Spd Cost': 50,
-
+         'Spd cost': 50,
          'Atk Dmg': 1,
-
+         'Atk Dmg cost': 50,
          'Atk Spd': 2000,
+         'Atk Spd cost': 50,
+         'unit health': 1,
+         'laser range': 100,
          'gold': 0},
+
     "Player04":
         {'color': WHITE,
          'base': None,
          'base loc': (SCREEN_WIDTH - 150, SCREEN_HEIGHT / 2),
          'group': p4_units,
          'respawn event': P4_ADDUNIT,
-         "Res. Spd": 1000,
-         'Atk Dmg': 1,
-         'Atk Spd': 2000, # Lower is faster
+         'Res. Spd': 1000,
+         'Res. Spd cost': 50,
          'Spd': 1,
-         'Spd Cost': 50,
-         'gold': 0}
+         'Spd cost': 50,
+         'Atk Dmg': 1,
+         'Atk Dmg cost': 50,
+         'Atk Spd': 2000,
+         'Atk Spd cost': 50,
+         'unit health': 1,
+         'laser range': 100,
+         'gold': 0},
 }
 
 upgrade_menu = UpgradeMenu(screen)
@@ -129,7 +144,7 @@ clock = pygame.time.Clock()
 leftclick_down_location = (0, 0)
 
 for x in players_dict:
-    players_dict[x]['base'] = Base(screen, players_dict[x], players_dict[x]['base loc'], players_dict[x]['color'], players_dict[x]['group'], players_dict[x]['respawn event'], lasers, all_sprites)
+    players_dict[x]['base'] = Base(screen, players_dict[x], all_sprites, lasers)
     players_dict[x]['group'].add(players_dict[x]['base'])
     bases.add(players_dict[x]['base'])
     all_sprites.add(players_dict[x]['base'])
@@ -153,11 +168,10 @@ def spawn_units():
     for player in players_dict:
         group = players_dict[player]['group']
         if event.type == players_dict[player]['respawn event']:
-            new_enemy = Unit(screen, players_dict[player], players_dict[player]['color'], players_dict[player]['Spd'],
-                             all_sprites, players_dict[player]['group'], lasers)
+            new_unit = Unit(screen, players_dict[player], all_sprites, lasers)
 
-            group.add(new_enemy)
-            all_sprites.add(new_enemy)
+            group.add(new_unit)
+            all_sprites.add(new_unit)
 
 unit_selector = SelectorBox()
 
