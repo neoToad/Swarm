@@ -5,6 +5,7 @@ import pygame
 from units_lasers import Unit
 from upgrade_menu import show_gold, UpgradeMenu, Button
 from Base import Base
+from ai_commands import AI
 
 pygame.init()
 
@@ -67,13 +68,18 @@ players_dict = {
          'Res. Spd cost': 50,
          'Spd': 1,
          'Spd cost': 50,
-         'Atk Dmg': 1,
+         'Atk Dmg': 200,
          'Atk Dmg cost': 50,
          'Atk Spd': 2000,
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
-         'gold': 0},
+         'base laser range': 200,
+         'base target range': 200,
+         'base cool down': 1500,
+         'gold': 0,
+         'score': 0,
+         },
 
     "Player02":
         {'color': BLUE,
@@ -91,7 +97,8 @@ players_dict = {
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
-         'gold': 0},
+         'gold': 0,
+         'score': 0},
 
     "Player03":
         {'color': GREEN,
@@ -109,7 +116,8 @@ players_dict = {
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
-         'gold': 0},
+         'gold': 0,
+         'score': 0},
 
     "Player04":
         {'color': WHITE,
@@ -127,14 +135,15 @@ players_dict = {
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
-         'gold': 0},
+         'gold': 0,
+         'score': 0},
 }
 
 upgrade_menu = UpgradeMenu(screen)
 btn_upgrade_dmg = Button(screen, 2, "Atk Dmg", players_dict["Player01"])
-btn_upgrade_atkspd = Button(screen,4, "Atk Spd", players_dict["Player01"])
-btn_upgrade_respd = Button(screen,6, "Res. Spd", players_dict["Player01"])
-btn_upgrade_spd = Button(screen,8, "Spd", players_dict["Player01"])
+btn_upgrade_atkspd = Button(screen, 4, "Atk Spd", players_dict["Player01"])
+btn_upgrade_respd = Button(screen, 6, "Res. Spd", players_dict["Player01"])
+btn_upgrade_spd = Button(screen, 8, "Spd", players_dict["Player01"])
 buttons = [btn_upgrade_dmg, btn_upgrade_atkspd, btn_upgrade_respd, btn_upgrade_spd]
 
 # Set up the drawing window
@@ -144,7 +153,7 @@ clock = pygame.time.Clock()
 leftclick_down_location = (0, 0)
 
 for x in players_dict:
-    players_dict[x]['base'] = Base(screen, players_dict[x], all_sprites, lasers)
+    players_dict[x]['base'] = Base(screen, players_dict[x], all_sprites, lasers, bases)
     players_dict[x]['group'].add(players_dict[x]['base'])
     bases.add(players_dict[x]['base'])
     all_sprites.add(players_dict[x]['base'])
@@ -168,12 +177,13 @@ def spawn_units():
     for player in players_dict:
         group = players_dict[player]['group']
         if event.type == players_dict[player]['respawn event']:
-            new_unit = Unit(screen, players_dict[player], all_sprites, lasers)
+            new_unit = Unit(screen, players_dict[player], all_sprites, lasers, bases)
 
             group.add(new_unit)
             all_sprites.add(new_unit)
 
 unit_selector = SelectorBox()
+ai = AI(p1_units, p2_units, p3_units, p4_units, bases)
 
 # Run until the user asks to quit
 running = True
@@ -198,6 +208,7 @@ while running:
                     unit.selected = False
                 leftclick_down_location = pygame.mouse.get_pos()
                 unit_selector.draw_new_selection_box = True
+                print(leftclick_down_location)
 
                 # Check if game menu button has been pressed
                 for button in buttons:
@@ -252,11 +263,16 @@ while running:
                     if unit not in bases:
                         laser.kill()
                         laser.player['gold'] += 1
+                        laser.player['score'] += 2
                         unit.kill()
                     else:
                         laser.kill()
                         unit.get_damage(laser.damage)
-                        pass
+                        laser.player['score'] += 1
+                        if unit.dead == True:
+                            laser.player['score'] += 100
+                            pygame.time.set_timer(unit.respawn_event, 0)
+                    # print(laser.player['score'])
 
     if unit_selector.draw_new_selection_box:
         pygame.draw.rect(screen, RED, selection_box, 2)
@@ -272,10 +288,11 @@ while running:
         if unit not in bases:
             if unit.selected == True:
                 pygame.draw.rect(screen, BLUE, unit, 2)
-            unit.overlapped(bases)
         # except AttributeError:
         #     pass
     # Start earning gold
+
+    ai.update()
 
     all_sprites.update()
     # lasers.update()

@@ -8,8 +8,8 @@ from Base import Base
 
 
 class Unit(Base):
-    def __init__(self, screen, player, all_units, lasers_group):
-        super().__init__(screen, player, all_units, lasers_group)
+    def __init__(self, screen, player, all_units, lasers_group, bases):
+        super().__init__(screen, player, all_units, lasers_group, bases)
         self.units_group = all_units
         self.image = pygame.Surface((10, 10), pygame.SRCALPHA)
         pygame.draw.circle(
@@ -35,7 +35,7 @@ class Unit(Base):
         # self.center_p = self.rect.center
         # Selected units
         self.screen = screen
-        self.color = player['color']
+        # self.color = player['color']
         self.selected = False
 
         # Move unit to x, y position
@@ -45,7 +45,7 @@ class Unit(Base):
         self.moving = False
 
         # Setting attack target
-        self.attack_target = None
+        # self.attack_target = None
         self.target_range = 50
 
         self.laser_range = player['laser range']
@@ -58,9 +58,7 @@ class Unit(Base):
         # Which sprite group it belongs
         self.player_group = player['group']
         self.lasers_group = lasers_group
-
-    def set_target(self, pos):
-        self.move_target = pygame.Vector2(pos)
+        self.bases = bases
 
     def update(self):
         self.move_to()
@@ -69,6 +67,7 @@ class Unit(Base):
             self.check_for_target = False
 
         self.attack()
+        self.overlapped(self.bases)
 
     def overlapped(self, group_to_skip):
         for unit in self.units_group:
@@ -78,31 +77,8 @@ class Unit(Base):
                 continue
             if self.rect.colliderect(unit.rect):
                 if self.rect.centerx == unit.rect.centerx:
-                    self.pos = (self.rect.centerx - 2, self.rect.centery + 2)
-                    unit.pos = (self.rect.centerx + 2, self.rect.centery - 2)
-                    self.move_target = pygame.Vector2(self.pos)
-                    unit.move_target = pygame.Vector2(unit.pos)
-
-    def move_to(self):
-        move = self.move_target - self.pos
-        move_length = move.length()
-
-        if self.moving:
-            if move_length < self.speed:
-                self.pos = self.move_target
-            elif move_length != 0:
-                move.normalize_ip()
-                move = move * self.speed
-                self.pos += move
-            self.rect.topleft = list(int(v) for v in self.pos)
-
-    def get_damage(self, amount):
-        if self.health > 0:
-            self.health -= amount
-        if self.health <= 0:
-            self.player_dead()
-
-    def player_dead(self):
-        self.kill()
-
+                    self.pos = (self.rect.centerx - 10, self.rect.centery)
+                    unit.pos = (self.rect.centerx, self.rect.centery)
+                    self.move_target = pygame.Vector2((self.move_target[0] - 5, self.move_target[1] + 10))
+                    unit.move_target = pygame.Vector2((unit.move_target[0] + 5, unit.move_target[1]))
 

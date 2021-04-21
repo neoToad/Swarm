@@ -7,7 +7,7 @@ from h_func import distance
 
 
 class Base(pygame.sprite.Sprite):
-    def __init__(self, screen, player, all_units, lasers_group):
+    def __init__(self, screen, player, all_units, lasers_group, bases):
         super().__init__()
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
         pygame.draw.circle(self.image, player['color'], (60 / 2, 60 / 2), 30)
@@ -30,13 +30,17 @@ class Base(pygame.sprite.Sprite):
 
         self.attack_target = None
         self.target_range = 300
-        self.laser_range = 325
+        self.laser_range = 200
         self.attack_cooldown = 1500
         self.units_group = all_units
 
         self.check_for_target = False
 
         self.attack_last = 2000
+
+        self.bases = bases
+
+        self.dead = False ## For AI
 
     def update(self):
         # self.basic_health()
@@ -92,10 +96,10 @@ class Base(pygame.sprite.Sprite):
         pygame.draw.rect(self.screen, (255,255,255), (self.rect.centerx - 50, self.rect.bottom + 5, self.health_bar_length, 10), 1)
 
     def player_dead(self):
+        self.dead = True
         self.kill()
-        for unit in self.player_group:
-            unit.kill()
-        pygame.time.set_timer(self.respawn_event, 0)
+        # if self in self.bases:
+        #     pygame.time.set_timer(self.respawn_event, 0)
 
     def find_target(self):
         """finds new targets in range:
@@ -110,7 +114,7 @@ class Base(pygame.sprite.Sprite):
             elif distance(self.rect, enemy.rect) > self.target_range:
                 self.attack_target = None
 
-        self.attack_target = None
+        # self.attack_target = None
 
     def attack(self):
         """attack, if able.
@@ -134,6 +138,22 @@ class Base(pygame.sprite.Sprite):
         dy = target_shoot[1] - self.rect.centery
         bullet = Laser(self.rect.centerx, self.rect.centery, dx, dy, self.units_group, self.player_group, player, self.laser_range)
         self.lasers_group.add(bullet)
+
+    def move_to(self):
+        move = self.move_target - self.pos
+        move_length = move.length()
+
+        if self.moving:
+            if move_length < self.speed:
+                self.pos = self.move_target
+            elif move_length != 0:
+                move.normalize_ip()
+                move = move * self.speed
+                self.pos += move
+            self.rect.topleft = list(int(v) for v in self.pos)
+
+    def set_target(self, pos):
+        self.move_target = pygame.Vector2(pos)
 
 
 class Laser(pygame.sprite.Sprite):
