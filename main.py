@@ -25,18 +25,6 @@ pygame.time.set_timer(GOLD_INCREASE, 1000)
 FIND_ATTACK_TARGET = pygame.USEREVENT + 5
 pygame.time.set_timer(FIND_ATTACK_TARGET, 500)
 
-# class SelectorBox():
-#     def __init__(self):
-#         self.draw_new_selection_box = False
-#         self.selection_completed = False
-#
-#     def draw_selection(self):
-#         if self.draw_new_selection_box:
-#             selection_box_x = current_mouse_location[0] - leftclick_down_location[0]
-#             selection_box_y = current_mouse_location[1] - leftclick_down_location[1]
-#             selection_box = pygame.Rect((leftclick_down_location), (selection_box_x, selection_box_y))
-#             return selection_box
-
 class SwarmGame:
     def __init__(self, SCREEN_WIDTH = 1400, SCREEN_HEIGHT = 900):
         self.w = SCREEN_WIDTH
@@ -175,6 +163,7 @@ class SwarmGame:
                                 laser.player['score'] += 1
                                 if unit.dead == True:
                                     laser.player['score'] += 100
+                                    unit.player['score'] += -100
                                     pygame.time.set_timer(unit.respawn_event, 0)
                             # print(laser.player['score'])
 
@@ -192,17 +181,8 @@ class SwarmGame:
                 if unit not in bases:
                     if unit.selected == True:
                         pygame.draw.rect(self.screen, (0, 0, 128), unit, 2)
-                # except AttributeError:
-                #     pass
-            # Start earning gold
-
-            ### PLAY STEP
-
-            # ai.update()
 
             all_sprites.update()
-            # lasers.update()
-
             lasers.draw(self.screen)
             all_sprites.draw(self.screen)
             bases.update()
