@@ -1,10 +1,6 @@
-
 import pygame
 
-
 pygame.init()
-
-
 
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 900
@@ -47,7 +43,7 @@ players_dict = {
          'Spd cost': 50,
          'Atk Dmg': 200,
          'Atk Dmg cost': 50,
-         'Atk Spd': 2000,
+         'Atk Spd': 4000,
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
@@ -56,6 +52,8 @@ players_dict = {
          'base cool down': 1500,
          'gold': 0,
          'score': 0,
+         'reward': 0,
+         'dead': False
          },
 
     "Player02":
@@ -71,12 +69,14 @@ players_dict = {
          'Spd cost': 50,
          'Atk Dmg': 1,
          'Atk Dmg cost': 50,
-         'Atk Spd': 2000,
+         'Atk Spd': 4000,
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
          'gold': 0,
-         'score': 0},
+         'score': 0,
+         'reward': 0,
+         'dead': False},
 
     "Player03":
         {'type': 'ai',
@@ -91,12 +91,14 @@ players_dict = {
          'Spd cost': 50,
          'Atk Dmg': 1,
          'Atk Dmg cost': 50,
-         'Atk Spd': 2000,
+         'Atk Spd': 4000,
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
          'gold': 0,
-         'score': 0},
+         'score': 0,
+         'reward': 0,
+         'dead': False},
 
     "Player04":
         {'type': 'ai',
@@ -111,10 +113,12 @@ players_dict = {
          'Spd cost': 50,
          'Atk Dmg': 1,
          'Atk Dmg cost': 50,
-         'Atk Spd': 2000,
+         'Atk Spd': 4000,
          'Atk Spd cost': 50,
          'unit health': 1,
          'laser range': 100,
          'gold': 0,
-         'score': 0},
+         'score': 0,
+         'reward': 0,
+         'dead': False},
 }

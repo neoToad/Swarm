@@ -42,6 +42,8 @@ class Base(pygame.sprite.Sprite):
 
         self.dead = False ## For AI
 
+        self.reward = 0 ## For AI
+
     def update(self):
         # self.basic_health()
         self.advanced_health()
